@@ -1,9 +1,9 @@
 name: Merge me!
 
 on:
-  pull_request_target:
-    branches:
-      - master
+  check_suite:
+    types:
+      - completed
 
 jobs:
   merge-me:
