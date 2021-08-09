@@ -4,7 +4,7 @@ permissions:
   pull-requests: write
   contents: write
 jobs:
-  dependabot-check:
+  dependabot:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
@@ -13,13 +13,15 @@ jobs:
         uses: dependabot/fetch-metadata@v1.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
-  merge-me:
-    needs:
-      - dependabot-check
-    runs-on: ubuntu-latest
-    steps:
-      - name: Merge me!
-        uses: ridedott/merge-me-action@v2
-        with:
-          GITHUB_TOKEN: ${{ secrets.DEPENDABOT_SECRET_AUTO_MERGE_TOKEN }}
-          PRESET: DEPENDABOT_PATCH
+      - name: Auto approve
+        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' && steps.dependabot-metadata.outputs.dependency-type == 'direct:development' }}
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Auto merge
+        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' && steps.dependabot-metadata.outputs.dependency-type == 'direct:development' }}
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
