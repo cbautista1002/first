@@ -4,7 +4,7 @@ permissions:
   pull-requests: write
   contents: write
 jobs:
-  dependabot:
+  dependabot-automerge:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
