@@ -20,3 +20,4 @@ jobs:
         uses: ridedott/merge-me-action@v2
         with:
           GITHUB_TOKEN: ${{ secrets.DEPENDABOT_SECRET_AUTO_MERGE_TOKEN }}
+          PRESET: DEPENDABOT_PATCH
