@@ -1,2 +1,2 @@
 django-nested-admin==3.3.2
-django==3.2.1
+django==3.2.4
