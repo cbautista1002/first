@@ -1,26 +1,47 @@
+# This is a Github action that will automatically approve and merge dependabot pull requests.
+#
+# A few conditions must be met in order for all steps to succeed:
+#    1. The PR author must be dependabot.
+#    2. All commits must be authored by dependabot.
+#    3. The dependency update must be:
+#        - a patch for a production package.
+#        - or any kind of update for a development package.
+#
+# In order for the auto merge to work, the repo needs to have auto merging enabled. See this link
+# for more: https://docs.github.com/en/github/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request
+#
+# See this link for details about what can go in this file: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+#
+# See this link for details about the "gh" CLI tool that is used below: https://cli.github.com/manual/
+
 name: Dependabot auto-approve and auto-merge
+
 on: pull_request_target
+
 permissions:
   pull-requests: write
   contents: write
+
 jobs:
   dependabot-automerge:
     runs-on: ubuntu-latest
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
+      # This dependabot fetch-metadata action will add variables that subsequent code can use and
+      # it will stop the workflow if this is not a dependabot pull request.
       - name: Dependabot metadata
         id: dependabot-metadata
         uses: dependabot/fetch-metadata@v1.1.0
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
       - name: Auto approve
-        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' && steps.dependabot-metadata.outputs.dependency-type == 'direct:development' }}
+        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || steps.dependabot-metadata.outputs.dependency-type == 'direct:development' }}
         run: gh pr review --approve "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: Auto merge
-        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' && steps.dependabot-metadata.outputs.dependency-type == 'direct:development' }}
+        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || steps.dependabot-metadata.outputs.dependency-type == 'direct:development' }}
         run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{github.event.pull_request.html_url}}
