@@ -1,0 +1,34 @@
+# This is a Github action that will tell dependabot to rebase branches when the master branch is updated.
+#
+# See this link for details about what can go in this file: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+#
+# See this link for details about the "gh" CLI tool that is used below: https://cli.github.com/manual/
+
+name: Dependabot auto-rebase
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  dependabot-autorebase:
+    runs-on: ubuntu-latest
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    steps:
+      # This dependabot fetch-metadata action will add variables that subsequent code can use and
+      # it will stop the workflow if this is not a dependabot pull request.
+      - name: Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v1.1.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Auto rebase
+        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || steps.dependabot-metadata.outputs.dependency-type == 'direct:development' }}
+        run: gh pr comment --body "@dependabot rebase"
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
